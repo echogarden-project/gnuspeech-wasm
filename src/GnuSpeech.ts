@@ -34,16 +34,13 @@ export async function synthesize(text: string, options: GnuSpeechOptions) {
 	const outputFileContent = m.FS.readFile(outputFilePath.value)
 	const outputParamsFileContent = m.FS.readFile(trmParamFilePathRef.value)
 
-	await writeFile('out/out.wav', outputFileContent)
-	await writeFile('out/out-params.txt', outputParamsFileContent)
-
 	textRef.free()
 	outputFilePath.free()
 	configDirPathRef.free()
 	trmParamFilePathRef.free()
 
 	return {
-		audioData: Uint8Array,
+		audioData: outputFileContent,
 		params: outputParamsFileContent
 	}
 }

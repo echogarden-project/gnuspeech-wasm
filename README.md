@@ -12,13 +12,16 @@ npm install @echogarden/gnuspeech-wasm
 
 Calling `synthesize` returns a WAVE format buffer:
 ```ts
+import { writeFile } from 'fs/promises'
 import { synthesize } from '@echogarden/gnuspeech-wasm'
 
-const resultWaveData = await synthesize('Hello World!', {
+const { audioData } = await synthesize('Hello World!', {
 	voice: 'male',
 	controlRate: 250,
 	tempo: 1.0,
 })
+
+await writeFile('out.wav', audioData)
 ```
 
 ## License
