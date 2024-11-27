@@ -1,28 +1,25 @@
 import { wrapEmscriptenModuleHeap } from 'wasm-heap-manager'
-import { decodeUtf8, encodeUtf8 } from './utilities/Utf8.js'
+import { defaultTrmControlModelFileContent } from './DefaultTrmControlModel.js'
 
 export async function synthesize(text: string, options: GnuSpeechOptions) {
 	options = { ...defaultGnuSpeechOptions, ...options }
 
+	let modifiedConfigFileContent = defaultTrmControlModelFileContent
+
+	modifiedConfigFileContent = modifiedConfigFileContent.replace('voice_name = male', `voice_name = ${options.voice}`)
+	modifiedConfigFileContent = modifiedConfigFileContent.replace('tempo = 1.0', `tempo = ${options.tempo}`)
+	modifiedConfigFileContent = modifiedConfigFileContent.replace('control_rate = 250.0', `control_rate = ${options.controlRate}`)
+
 	const m = await getWasmModule()
+
+	const dataPath = '/data/en'
+	m.FS.writeFile(`${dataPath}/trm_control_model.txt`, modifiedConfigFileContent)
 
 	const manager = wrapEmscriptenModuleHeap(m)
 
-	{
-		const configFilePath = '/data/en/trm_control_model.txt'
-
-		let fileContent = decodeUtf8(m.FS.readFile(configFilePath))
-
-		fileContent = fileContent.replace('voice_name = male', `voice_name = ${options.voice}`)
-		fileContent = fileContent.replace('tempo = 1.0', `tempo = ${options.tempo}`)
-		fileContent = fileContent.replace('control_rate = 250.0', `control_rate = ${options.controlRate}`)
-		
-		m.FS.writeFile(configFilePath, encodeUtf8(fileContent))
-	}
-
 	const textRef = manager.allocNullTerminatedUtf8String(text)
 	const outputFilePath = manager.allocNullTerminatedUtf8String('./out.wav')
-	const configDirPathRef = manager.allocNullTerminatedUtf8String('/data/en')
+	const configDirPathRef = manager.allocNullTerminatedUtf8String(dataPath)
 	const trmParamFilePathRef = manager.allocNullTerminatedUtf8String('./out-params.txt')
 
 	m._GnuSpeech_synthesizeToFile(textRef.address, outputFilePath.address, configDirPathRef.address, trmParamFilePathRef.address, options.debug)
