@@ -1,4 +1,4 @@
-import { readdir, readFile, writeFile } from 'fs/promises'
+import { readdir, readFile } from 'fs/promises'
 import { wrapEmscriptenModuleHeap } from 'wasm-heap-manager'
 
 export async function synthesize(text: string, options: GnuSpeechOptions) {
